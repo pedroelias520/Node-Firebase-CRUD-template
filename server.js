@@ -8,7 +8,18 @@ admin.initializeApp({
     credential: admin.credential.cert(credentials)
 });
 
-app.post('/create', async(req, res)=>{
+const db = admin.firestore();
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
+const PORT = process.env.PORT || 8080;
+
+app.listen(PORT, ()=>{
+    console.log(`SERVER IS RUNNING ON PORT ${PORT}`)
+})
+
+
+app.post('/create', async (req, res) =>{
     try{        
         console.log(req.body);
         const id = req.body.email;
@@ -24,12 +35,44 @@ app.post('/create', async(req, res)=>{
     }
 })
 
-const db = admin.firestore();
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.get('/read/:id',async (req, res)=>{
+    try{
+        const userRef = db.collection("users").doc(req.params.id);
+        const response = await userRef.get();
+        res.send(response.data());
+    }catch(error){
+        res.send(error)
+    }
+})
 
-const PORT = process.env.PORT || 8080;
+app.get('/read',async (req, res)=>{
+    try{
+        const userRef = db.collection("users");
+        const response = await userRef.get();
+        res.send(response.data());
+    }catch(error){
+        res.send(error)
+    }
+})
 
-app.listen(PORT, ()=>{
-    console.log(`SERVER IS RUNNING ON PORT ${PORT}`)
+app.post('/update', async(req, res)=>{
+    try{
+        const id=req.body.id;
+        const newFirstName = "hello world";
+        const userRef = await db.collection("users").doc(id).update({
+            firstName: newFirstName
+        });
+        res.send(userRef);
+    }catch(error){
+        res.send(error)
+    }
+})
+
+app.delete('/delete/:id', async(req, res)=>{
+    try{
+        const userRef = await db.collection("users").doc(req.params.id).delete()
+        res.send(userRef);
+    }catch(error){
+        res.send(error)
+    }
 })
